@@ -13,18 +13,22 @@ inputs:
     type: array
     items: string
   working-directory:
-    description: Set the working directory of codestripper
+    description: Set the working directory of codestripper (defaults to pwd)
     required: false
+    type: string
   output:
     description: Output directory for stripper files
     required: false
+    default: out
   comment:
     description: Symbol used as comment
     required: false
+    default: "//"
   recursive:
     description: Whether or not to use recursive search in the globs for files/exclude
     required: false
     type: boolean
+    default: true
   verbosity:
     description: Set verbosity level of output
     required: false
@@ -34,6 +38,7 @@ inputs:
     description: Perform a dry-run, no actual files will be written
     required: false
     type: boolean
+    default: false
 runs:
   using: python
   main: main.py
