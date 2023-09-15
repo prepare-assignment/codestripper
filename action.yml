@@ -26,10 +26,10 @@ inputs:
     required: false
     default: "//"
   recursive:
-    description: Wether or not to use recursive search in the globs for files/exclude
+    description: Whether or not to use recursive search in the globs for files/exclude
     required: false
     type: boolean
-    default: false
+    default: true
   verbosity:
     description: Set verbosity level of output
     required: false
