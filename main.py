@@ -16,6 +16,8 @@ def main() -> None:
     verbosity: int = get_input("verbosity")
     dry_run: bool = get_input("dry-run")
 
+    print(include, exclude, cwd)
+
     files = get_matching_files(include, exclude, relative_to=cwd, recursive=recursive)
     set_logger_level("codestripper", verbosity)
     strip_files(files, working_directory=cwd, comment=comment, output=out, dry_run=dry_run)
