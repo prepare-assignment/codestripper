@@ -39,6 +39,15 @@ inputs:
     required: false
     type: boolean
     default: false
+outputs:
+  matched-files:
+    description: Files that matched the provided input glob(s)
+    type: array
+    items: string
+  stripped-files:
+    description: The actual stripped files from the matched-files
+    type: array
+    items: string
 runs:
   using: python
   main: main.py
