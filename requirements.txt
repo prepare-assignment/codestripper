@@ -1,2 +1,2 @@
 codestripper==0.1.3
-prepare-toolbox==0.2.0
+prepare-toolbox==0.3.0
