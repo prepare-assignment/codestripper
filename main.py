@@ -25,8 +25,10 @@ def main() -> None:
     debug(f"dry_run: {dry_run}")
 
     files = get_matching_files(include, exclude, relative_to=cwd, recursive=recursive)
+    debug(f"Matched files: {files}")
     set_logger_level("codestripper", verbosity)
-    strip_files(files, working_directory=cwd, comment=comment, output=out, dry_run=dry_run)
+    stripped = strip_files(files, working_directory=cwd, comment=comment, output=out, dry_run=dry_run)
+    debug(f"Stripped files: {stripped}")
 
 
 main()
