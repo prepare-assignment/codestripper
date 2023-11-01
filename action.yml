@@ -1,4 +1,4 @@
-id: prepare_codestripper
+id: prepare-codestripper
 name: Codestripper action
 description: Prepare action stripping code using the prepare_codestripper
 inputs:
