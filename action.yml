@@ -1,6 +1,6 @@
-id: codestripper
+id: prepare_codestripper
 name: Codestripper action
-description: Prepare action stripping code using the codestripper
+description: Prepare action stripping code using the prepare_codestripper
 inputs:
   include:
     description: files to include for code stripping (glob)
@@ -13,11 +13,16 @@ inputs:
     type: array
     items: string
   working-directory:
-    description: Set the working directory of codestripper (defaults to pwd)
+    description: Set the working directory of prepare_codestripper (defaults to pwd)
     required: false
     type: string
-  output:
-    description: Output directory for stripper files
+  allow-outside-working-directory:
+    description: Allow glob(s) to match outside the working directory
+    required: false
+    type: boolean
+    default: false
+  output-directory:
+    description: Output directory for stripped files
     required: false
     default: out
   comment:
