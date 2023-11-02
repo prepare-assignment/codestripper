@@ -55,4 +55,4 @@ outputs:
     items: string
 runs:
   using: python
-  main: main.py
+  main: prepare_codestripper/main.py
