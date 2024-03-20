@@ -44,6 +44,11 @@ inputs:
     required: false
     type: boolean
     default: false
+  fail-on-error:
+    description: Should the action fail if an error occurs during codestripping
+    required: false
+    type: boolean
+    default: true
 outputs:
   matched-files:
     description: Files that matched the provided input glob(s)

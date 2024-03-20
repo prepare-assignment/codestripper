@@ -19,6 +19,7 @@ def strip() -> None:
         recursive: bool = get_input("recursive")
         verbosity: int = get_input("verbosity")
         dry_run: bool = get_input("dry-run")
+        fail_on_error: bool = get_input("fail-on-error")
 
         files = get_matching_files(include, exclude, allow_outside_working_dir=allow_outside,
                                    relative_to=cwd, recursive=recursive)
@@ -27,7 +28,8 @@ def strip() -> None:
             set_failed(f"No files matched")
         info(f"Matched files: {files}")
         set_logger_level("prepare_codestripper", verbosity)
-        stripped = strip_files(files, working_directory=cwd, comment=comment, output=out, dry_run=dry_run)
+        stripped = strip_files(files, working_directory=cwd, comment=comment, output=out,
+                               dry_run=dry_run, fail_on_error=fail_on_error)
         set_output("matched-files", files)
         set_output("stripped-files", stripped)
     except Exception as e:
