@@ -49,6 +49,11 @@ dry-run:
   required: false
   type: boolean
   default: false
+fail-on-error:
+  description: Should the action fail if an error occurs
+  required: false
+  type: boolean
+  default: true
 ```
 
 ## Outputs
