@@ -44,6 +44,8 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
             return dry_run
         elif key == "comment":
             return comment
+        elif key == "fail-on-error":
+            return True
 
     mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
     mocked_matching_files = mocker.patch("prepare_codestripper.main.get_matching_files", return_value=matched_files)
@@ -53,9 +55,9 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
     strip()
 
     mocked_matching_files.assert_called_once_with(include, exclude, allow_outside_working_dir=allow_outside,
-                                                  relative_to=working_directory, recursive=recursive)
-    mocked_strip_files.assert_called_once_with(matched_files, working_directory=working_directory,
-                                               comment=comment, output=output_directory, dry_run=dry_run)
+                                                  relative_to=working_directory, recursive=recursive,)
+    mocked_strip_files.assert_called_once_with(matched_files, working_directory=working_directory, comment=comment,
+                                               output=output_directory, dry_run=dry_run, fail_on_error=True)
     assert mocked_set_output.call_count == 2
 
 
@@ -96,6 +98,8 @@ def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
             return dry_run
         elif key == "comment":
             return comment
+        elif key == "fail-on-error":
+            return True
 
     mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
     mocker.patch("prepare_codestripper.main.get_matching_files", return_value=matched_files)

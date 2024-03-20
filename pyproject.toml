@@ -1,5 +1,5 @@
 [tool.poetry]
-version = "0.1.0"
+version = "0.1.4"
 name = "prepare-codestripper"
 description = "Codestripper action for prepare assignment"
 authors = ["Martijn Bonajo <m.bonajo@fontys.nl>"]
@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 prepare-toolbox = "0.4.0"
-codestripper = "^0.1.3"
+codestripper = "0.1.4"
 
 
 [tool.poetry.group.test.dependencies]
