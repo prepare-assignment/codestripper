@@ -25,6 +25,7 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
     comment = "//"
     matched_files = ["a.txt"]
 
+
     def __get_input(key: str, required: bool = False) -> Any:
         if key == "include":
             return include
@@ -79,6 +80,7 @@ def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
     comment = "//"
     matched_files = []
 
+
     def __get_input(key: str, required: bool = False) -> Any:
         if key == "include":
             return include
@@ -108,3 +110,50 @@ def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
 
     with pytest.raises(SystemExit):
         strip()
+
+
+def test_fail_on_error(mocker: pytest_mock.MockerFixture) -> None:
+    """
+    Test that it fails if there are strip errors
+
+    :param mocker: mocker
+    :return:
+    """
+    include = ["a.txt", "b.txt"]
+    exclude = []
+    working_directory = "testproject"
+    allow_outside = False
+    output_directory = "out"
+    recursive = True
+    verbosity = 3
+    dry_run = False
+    comment = "//"
+
+    def __get_input(key: str, required: bool = False) -> Any:
+        if key == "include":
+            return include
+        elif key == "exclude":
+            return exclude
+        elif key == "working-directory":
+            return working_directory
+        elif key == "allow-outside-working-directory":
+            return allow_outside
+        elif key == "output-directory":
+            return output_directory
+        elif key == "recursive":
+            return recursive
+        elif key == "verbosity":
+            return verbosity
+        elif key == "dry-run":
+            return dry_run
+        elif key == "comment":
+            return comment
+        elif key == "fail-on-error":
+            return True
+
+    mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
+    mock = mocker.patch("prepare_codestripper.main.set_failed")
+
+    strip()
+
+    mock.assert_called_once()
