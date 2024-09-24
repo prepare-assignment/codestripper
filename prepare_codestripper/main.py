@@ -15,7 +15,7 @@ def strip() -> None:
         cwd: str = get_input("working-directory")
         allow_outside: bool = get_input("allow-outside-working-directory")
         out: str = get_input("output-directory")
-        comment: str = get_input("comment")
+        comments: Optional[List[str]] = get_input("comments")
         recursive: bool = get_input("recursive")
         verbosity: int = get_input("verbosity")
         dry_run: bool = get_input("dry-run")
@@ -28,7 +28,7 @@ def strip() -> None:
             set_failed(f"No files matched")
         info(f"Matched files: {files}")
         set_logger_level("codestripper", verbosity)
-        stripped = strip_files(files, working_directory=cwd, comment=comment, output=out,
+        stripped = strip_files(files, working_directory=cwd, comments=comments, output=out,
                                dry_run=dry_run, fail_on_error=fail_on_error)
         set_output("matched-files", files)
         set_output("stripped-files", stripped)

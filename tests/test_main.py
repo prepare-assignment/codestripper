@@ -22,7 +22,7 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
     recursive = True
     verbosity = 3
     dry_run = False
-    comment = "//"
+    comments = None
     matched_files = ["a.txt"]
 
 
@@ -43,8 +43,8 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
             return verbosity
         elif key == "dry-run":
             return dry_run
-        elif key == "comment":
-            return comment
+        elif key == "comments":
+            return comments
         elif key == "fail-on-error":
             return True
 
@@ -57,7 +57,7 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
 
     mocked_matching_files.assert_called_once_with(include, exclude, allow_outside_working_dir=allow_outside,
                                                   relative_to=working_directory, recursive=recursive,)
-    mocked_strip_files.assert_called_once_with(matched_files, working_directory=working_directory, comment=comment,
+    mocked_strip_files.assert_called_once_with(matched_files, working_directory=working_directory, comments=comments,
                                                output=output_directory, dry_run=dry_run, fail_on_error=True)
     assert mocked_set_output.call_count == 2
 
@@ -77,7 +77,7 @@ def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
     recursive = True
     verbosity = 3
     dry_run = False
-    comment = "//"
+    comments = ".test:!!"
     matched_files = []
 
 
@@ -98,8 +98,8 @@ def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
             return verbosity
         elif key == "dry-run":
             return dry_run
-        elif key == "comment":
-            return comment
+        elif key == "comments":
+            return comments
         elif key == "fail-on-error":
             return True
 
@@ -127,7 +127,7 @@ def test_fail_on_error(mocker: pytest_mock.MockerFixture) -> None:
     recursive = True
     verbosity = 3
     dry_run = False
-    comment = "//"
+    comments = ".txt://"
 
     def __get_input(key: str, required: bool = False) -> Any:
         if key == "include":
@@ -146,8 +146,8 @@ def test_fail_on_error(mocker: pytest_mock.MockerFixture) -> None:
             return verbosity
         elif key == "dry-run":
             return dry_run
-        elif key == "comment":
-            return comment
+        elif key == "comments":
+            return comments
         elif key == "fail-on-error":
             return True
 
