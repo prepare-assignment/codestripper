@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from codestripper.utils import set_logger_level  # type: ignore
 from codestripper.code_stripper import strip_files  # type: ignore
+from codestripper.utils.enums import UnexpectedInputOptions
 from prepare_toolbox.core import get_input, set_output, set_failed, debug, info
 from prepare_toolbox.file import get_matching_files
 
@@ -20,6 +21,8 @@ def strip() -> None:
         verbosity: int = get_input("verbosity")
         dry_run: bool = get_input("dry-run")
         fail_on_error: bool = get_input("fail-on-error")
+        unknown_extension: UnexpectedInputOptions = get_input("unknown")
+        binary: UnexpectedInputOptions = get_input("binary")
 
         files = get_matching_files(include, exclude, allow_outside_working_dir=allow_outside,
                                    relative_to=cwd, recursive=recursive)
@@ -29,7 +32,8 @@ def strip() -> None:
         info(f"Matched files: {files}")
         set_logger_level("codestripper", verbosity)
         stripped = strip_files(files, working_directory=cwd, comments=comments, output=out,
-                               dry_run=dry_run, fail_on_error=fail_on_error)
+                               dry_run=dry_run, fail_on_error=fail_on_error, unknown_extension=unknown_extension,
+                               binary=binary)
         set_output("matched-files", files)
         set_output("stripped-files", stripped)
     except Exception as e:
