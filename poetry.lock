@@ -13,13 +13,13 @@ files = [
 
 [[package]]
 name = "codestripper"
-version = "1.1.0"
+version = "1.1.1"
 description = "CodeStripper used to strip code from assignments"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "codestripper-1.1.0-py3-none-any.whl", hash = "sha256:2a379fb04b5f8acfe356161d836f6cd3b8f29ab3d723436f6825d572be65d706"},
-    {file = "codestripper-1.1.0.tar.gz", hash = "sha256:353a2d69138e8511aac00158245dfea4f381f9201d9902a6d031eee9beeebb2f"},
+    {file = "codestripper-1.1.1-py3-none-any.whl", hash = "sha256:ff2ce451a162c5b9d80f7838e5270cc132a937b65354879a735ec120f2b53e4e"},
+    {file = "codestripper-1.1.1.tar.gz", hash = "sha256:bd40356a14aa615960b8548438538579a6dd7ae0ec2ded898eb8c6b60d8d1fc3"},
 ]
 
 [[package]]
@@ -370,4 +370,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "126be96c04d28a7997f682e7e51cbbb630cc2995e39ffe3417b0f89b4ef4dd45"
+content-hash = "45fa0626c014b7b5cbd79c00a6e1b2bc5da076056764eff17be850569db3fe36"

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from codestripper.utils import set_logger_level  # type: ignore
 from codestripper.code_stripper import strip_files  # type: ignore
-from codestripper.utils.enums import UnexpectedInputOptions
+from codestripper.utils.enums import UnexpectedInputOptions # type: ignore
 from prepare_toolbox.core import get_input, set_output, set_failed, debug, info
 from prepare_toolbox.file import get_matching_files
 
