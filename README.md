@@ -54,6 +54,16 @@ fail-on-error:
   required: false
   type: boolean
   default: true
+unknown:
+  description: What to do with unknown file extensions (FAIL, IGNORE, INCLUDE)
+  required: false
+  type: string
+  default: FAIL
+binary:
+  description: What to do with binary files (FAIL, IGNORE, INCLUDE)
+  required: false
+  type: string
+  default: FAIL
 ```
 
 ## Outputs

@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 import pytest_mock
+from codestripper.utils.enums import UnexpectedInputOptions
 
 from prepare_codestripper.main import strip
 
@@ -24,6 +25,8 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
     dry_run = False
     comments = None
     matched_files = ["a.txt"]
+    unknown = UnexpectedInputOptions.INCLUDE
+    binary = UnexpectedInputOptions.IGNORE
 
 
     def __get_input(key: str, required: bool = False) -> Any:
@@ -47,6 +50,10 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
             return comments
         elif key == "fail-on-error":
             return True
+        elif key == "unknown":
+            return unknown
+        elif key == "binary":
+            return binary
 
     mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
     mocked_matching_files = mocker.patch("prepare_codestripper.main.get_matching_files", return_value=matched_files)
@@ -58,7 +65,8 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
     mocked_matching_files.assert_called_once_with(include, exclude, allow_outside_working_dir=allow_outside,
                                                   relative_to=working_directory, recursive=recursive,)
     mocked_strip_files.assert_called_once_with(matched_files, working_directory=working_directory, comments=comments,
-                                               output=output_directory, dry_run=dry_run, fail_on_error=True)
+                                               output=output_directory, dry_run=dry_run, fail_on_error=True, binary=binary,
+                                               unknown_extension=unknown,)
     assert mocked_set_output.call_count == 2
 
 
