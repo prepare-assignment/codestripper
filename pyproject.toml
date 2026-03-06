@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 prepare-toolbox = "0.4.0"
 codestripper = "1.2.0"
 
