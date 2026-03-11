@@ -28,7 +28,8 @@ def strip() -> None:
                                    relative_to=cwd, recursive=recursive)
 
         if files is None or len(files) == 0:
-            set_failed(f"No files matched")
+            info("No files matched")
+            return
         info(f"Matched files: {files}")
         set_logger_level("codestripper", verbosity)
         stripped = strip_files(files, working_directory=cwd, comments=comments, output=out,

@@ -72,7 +72,7 @@ def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
 
 def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
     """
-    Test that it fails if no files match
+    Test that it logs info and returns if no files match
 
     :param mocker: mocker
     :return:
@@ -113,11 +113,13 @@ def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
 
     mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
     mocker.patch("prepare_codestripper.main.get_matching_files", return_value=matched_files)
-    mocker.patch("prepare_codestripper.main.strip_files")
-    mocker.patch("prepare_codestripper.main.set_output")
+    mocked_strip_files = mocker.patch("prepare_codestripper.main.strip_files")
+    mocked_info = mocker.patch("prepare_codestripper.main.info")
 
-    with pytest.raises(SystemExit):
-        strip()
+    strip()
+
+    mocked_info.assert_called_once_with("No files matched")
+    mocked_strip_files.assert_not_called()
 
 
 def test_fail_on_error(mocker: pytest_mock.MockerFixture) -> None:
