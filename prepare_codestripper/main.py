@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from codestripper.utils import set_logger_level  # type: ignore
 from codestripper.code_stripper import strip_files  # type: ignore
@@ -7,12 +7,11 @@ from prepare_toolbox.core import get_input, set_output, set_failed, debug, info
 from prepare_toolbox.file import get_matching_files
 
 
-def __unexpected_input_option(name: str) -> UnexpectedInputOptions:
+def __unexpected_input_option(name: str, value: Any) -> UnexpectedInputOptions:
     """
     Convert the input (e.g. 'FAIL' or 'fail') to the codestripper option. The library compares with the enum,
     passing the string meant that every value behaved like INCLUDE.
     """
-    value = get_input(name)
     try:
         return UnexpectedInputOptions(str(value).lower())
     except ValueError:
@@ -34,8 +33,8 @@ def strip() -> None:
         verbosity: int = get_input("verbosity")
         dry_run: bool = get_input("dry-run")
         fail_on_error: bool = get_input("fail-on-error")
-        unknown_extension = __unexpected_input_option("unknown")
-        binary = __unexpected_input_option("binary")
+        unknown_extension = __unexpected_input_option("unknown", get_input("unknown"))
+        binary = __unexpected_input_option("binary", get_input("binary"))
 
         files = get_matching_files(include, exclude, allow_outside_working_dir=allow_outside,
                                    relative_to=cwd, recursive=recursive)
