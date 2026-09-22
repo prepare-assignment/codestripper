@@ -158,3 +158,42 @@ def test_invalid_value(option: str, unexpected_files: Path, monkeypatch: pytest.
     message = str(failed.call_args.args[0])
     assert f"Invalid value 'SKIP' for '{option}'" in message
     assert "FAIL, IGNORE, INCLUDE" in message
+
+
+def test_comments_for_unknown_extension(project: Path, monkeypatch: pytest.MonkeyPatch,
+                                        mocker: pytest_mock.MockerFixture) -> None:
+    (project / "solution" / "run.xyz").write_text("keep\nsecret #cs:remove\n")
+    set_inputs(monkeypatch, include=["run.xyz"], working_directory="solution", comments=[".xyz:#"])
+    mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_not_called()
+    assert (project / "out" / "run.xyz").read_text() == "keep\n"
+
+
+def test_comments_with_open_and_close(project: Path, monkeypatch: pytest.MonkeyPatch,
+                                      mocker: pytest_mock.MockerFixture) -> None:
+    (project / "solution" / "page.html").write_text("<p>keep</p>\n<p>secret</p> <!--cs:remove-->\n")
+    set_inputs(monkeypatch, include=["page.html"], working_directory="solution", comments=[".html:<!--:-->"])
+    mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_not_called()
+    assert (project / "out" / "page.html").read_text() == "<p>keep</p>\n"
+
+
+def test_comments_override_builtin_extension(project: Path, monkeypatch: pytest.MonkeyPatch,
+                                             mocker: pytest_mock.MockerFixture) -> None:
+    """With '.java:#', '//cs:' is no longer a tag and the file is copied unchanged"""
+    set_inputs(monkeypatch, include=["src/A.java"], working_directory="solution", comments=[".java:#"])
+    mocker.patch("prepare_codestripper.main.set_output")
+    strip()
+    assert (project / "out" / "src" / "A.java").read_text() == JAVA
+
+
+def test_invalid_comments(project: Path, monkeypatch: pytest.MonkeyPatch, mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=["src/A.java"], working_directory="solution", comments=["//"])
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_called_once()
+    assert "Invalid comment '//'" in str(failed.call_args.args[0])
