@@ -100,3 +100,61 @@ def test_fail_on_error(fail_on_error: bool, should_fail: bool, project: Path, mo
     failed = mocker.patch("prepare_codestripper.main.set_failed")
     strip()
     assert failed.called == should_fail
+
+
+@pytest.fixture
+def unexpected_files(project: Path) -> Path:
+    (project / "solution" / "src" / "A.class").write_bytes(b"\xca\xfe\xba\xbe\x00\x00\xff\xfe")
+    (project / "solution" / "src" / "data.foo").write_text("data\n")
+    return project
+
+
+@pytest.mark.parametrize("option, value, file", [
+    ("binary", "FAIL", "A.class"), ("binary", "fail", "A.class"),
+    ("unknown", "FAIL", "data.foo"), ("unknown", "fail", "data.foo"),
+])
+def test_fail(option: str, value: str, file: str, unexpected_files: Path, monkeypatch: pytest.MonkeyPatch,
+              mocker: pytest_mock.MockerFixture) -> None:
+    """FAIL (the default) used to behave like INCLUDE: the file was copied without any error"""
+    set_inputs(monkeypatch, include=[f"src/{file}"], working_directory="solution", **{option: value})
+    mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_called_once()
+
+
+@pytest.mark.parametrize("option, file", [("binary", "A.class"), ("unknown", "data.foo")])
+def test_ignore(option: str, file: str, unexpected_files: Path, monkeypatch: pytest.MonkeyPatch,
+                mocker: pytest_mock.MockerFixture) -> None:
+    """IGNORE used to behave like INCLUDE: the file was copied"""
+    set_inputs(monkeypatch, include=["src/A.java", f"src/{file}"], working_directory="solution", **{option: "IGNORE"})
+    set_output = mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_not_called()
+    assert not (unexpected_files / "out" / "src" / file).exists()
+    set_output.assert_any_call("stripped-files", ["src/A.java"])
+
+
+@pytest.mark.parametrize("option, file", [("binary", "A.class"), ("unknown", "data.foo")])
+def test_include(option: str, file: str, unexpected_files: Path, monkeypatch: pytest.MonkeyPatch,
+                 mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=[f"src/{file}"], working_directory="solution", **{option: "INCLUDE"})
+    mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_not_called()
+    source = unexpected_files / "solution" / "src" / file
+    assert (unexpected_files / "out" / "src" / file).read_bytes() == source.read_bytes()
+
+
+@pytest.mark.parametrize("option", ["binary", "unknown"])
+def test_invalid_value(option: str, unexpected_files: Path, monkeypatch: pytest.MonkeyPatch,
+                       mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=["src/A.java"], working_directory="solution", **{option: "SKIP"})
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    failed.assert_called_once()
+    message = str(failed.call_args.args[0])
+    assert f"Invalid value 'SKIP' for '{option}'" in message
+    assert "FAIL, IGNORE, INCLUDE" in message

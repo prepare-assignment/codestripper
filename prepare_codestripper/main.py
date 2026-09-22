@@ -7,6 +7,19 @@ from prepare_toolbox.core import get_input, set_output, set_failed, debug, info
 from prepare_toolbox.file import get_matching_files
 
 
+def __unexpected_input_option(name: str) -> UnexpectedInputOptions:
+    """
+    Convert the input (e.g. 'FAIL' or 'fail') to the codestripper option. The library compares with the enum,
+    passing the string meant that every value behaved like INCLUDE.
+    """
+    value = get_input(name)
+    try:
+        return UnexpectedInputOptions(str(value).lower())
+    except ValueError:
+        options = ", ".join(option.name for option in UnexpectedInputOptions)
+        raise ValueError(f"Invalid value '{value}' for '{name}', expected one of: {options}")
+
+
 def strip() -> None:
     try:
         include: List[str] = get_input("include", required=True)
@@ -21,8 +34,8 @@ def strip() -> None:
         verbosity: int = get_input("verbosity")
         dry_run: bool = get_input("dry-run")
         fail_on_error: bool = get_input("fail-on-error")
-        unknown_extension: UnexpectedInputOptions = get_input("unknown")
-        binary: UnexpectedInputOptions = get_input("binary")
+        unknown_extension = __unexpected_input_option("unknown")
+        binary = __unexpected_input_option("binary")
 
         files = get_matching_files(include, exclude, allow_outside_working_dir=allow_outside,
                                    relative_to=cwd, recursive=recursive)
