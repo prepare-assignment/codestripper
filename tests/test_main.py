@@ -1,169 +1,102 @@
-from typing import Any
+import json
+from pathlib import Path
+from typing import Any, Dict
 
 import pytest
 import pytest_mock
-from codestripper.utils.enums import UnexpectedInputOptions
+import yaml
 
 from prepare_codestripper.main import strip
 
+TASK = Path(__file__).parent.parent / "task.yml"
 
-def test_inputs(mocker: pytest_mock.MockerFixture) -> None:
+JAVA = """public class A {
+    public int answer() {
+        //cs:replace:return 0;
+        return 42;
+    }
+    //cs:remove:start
+    private void solution() {}
+    //cs:remove:end
+}
+"""
+
+STRIPPED_JAVA = """public class A {
+    public int answer() {
+        return 0;
+        return 42;
+    }
+}
+"""
+
+
+def set_inputs(monkeypatch: pytest.MonkeyPatch, **inputs: Any) -> None:
     """
-    This basically only tests that all params are passed correctly.
-    The main work is done by the codestripper itself
-
-    :param mocker: mocker
-    :return:
+    Pass the inputs like prepare-assignment core does: as JSON in PREPARE_<NAME> environment variables,
+    including the defaults from task.yml. Use the names from task.yml, with '_' for '-'.
     """
-    include = ["a.txt", "b.txt"]
-    exclude = ["c.txt"]
-    working_directory = "solution"
-    allow_outside = False
-    output_directory = "out"
-    recursive = True
-    verbosity = 3
-    dry_run = False
-    comments = None
-    matched_files = ["a.txt"]
-    unknown = UnexpectedInputOptions.INCLUDE
-    binary = UnexpectedInputOptions.IGNORE
+    definition: Dict[str, Any] = yaml.safe_load(TASK.read_text(encoding="utf-8"))["inputs"]
+    values = {name: spec["default"] for name, spec in definition.items() if "default" in spec}
+    values.update({key.replace("_", "-"): value for key, value in inputs.items()})
+    for key, value in values.items():
+        if value is not None:
+            monkeypatch.setenv(f"PREPARE_{key.upper()}", json.dumps(value))
 
 
-    def __get_input(key: str, required: bool = False) -> Any:
-        if key == "include":
-            return include
-        elif key == "exclude":
-            return exclude
-        elif key == "working-directory":
-            return working_directory
-        elif key == "allow-outside-working-directory":
-            return allow_outside
-        elif key == "output-directory":
-            return output_directory
-        elif key == "recursive":
-            return recursive
-        elif key == "verbosity":
-            return verbosity
-        elif key == "dry-run":
-            return dry_run
-        elif key == "comments":
-            return comments
-        elif key == "fail-on-error":
-            return True
-        elif key == "unknown":
-            return unknown
-        elif key == "binary":
-            return binary
+@pytest.fixture
+def project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    (tmp_path / "solution" / "src").mkdir(parents=True)
+    (tmp_path / "solution" / "src" / "A.java").write_text(JAVA)
+    (tmp_path / "solution" / "src" / "B.java").write_text("class B {}\n")
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
 
-    mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
-    mocked_matching_files = mocker.patch("prepare_codestripper.main.get_matching_files", return_value=matched_files)
-    mocked_strip_files = mocker.patch("prepare_codestripper.main.strip_files")
-    mocked_set_output = mocker.patch("prepare_codestripper.main.set_output")
 
+def test_strip(project: Path, monkeypatch: pytest.MonkeyPatch, mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=["**/*.java"], working_directory="solution", output_directory="out/assignment")
+    set_output = mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
     strip()
-
-    mocked_matching_files.assert_called_once_with(include, exclude, allow_outside_working_dir=allow_outside,
-                                                  relative_to=working_directory, recursive=recursive,)
-    mocked_strip_files.assert_called_once_with(matched_files, working_directory=working_directory, comments=comments,
-                                               output=output_directory, dry_run=dry_run, fail_on_error=True, binary=binary,
-                                               unknown_extension=unknown,)
-    assert mocked_set_output.call_count == 2
+    failed.assert_not_called()
+    assert (project / "out" / "assignment" / "src" / "A.java").read_text() == STRIPPED_JAVA
+    assert (project / "out" / "assignment" / "src" / "B.java").read_text() == "class B {}\n"
+    set_output.assert_any_call("matched-files", ["src/A.java", "src/B.java"])
+    set_output.assert_any_call("stripped-files", ["src/A.java", "src/B.java"])
 
 
-def test_no_matches(mocker: pytest_mock.MockerFixture) -> None:
-    """
-    Test that it logs info and returns if no files match
-
-    :param mocker: mocker
-    :return:
-    """
-    include = ["a.txt", "b.txt"]
-    exclude = ["c.txt"]
-    working_directory = "solution"
-    allow_outside = False
-    output_directory = "out"
-    recursive = True
-    verbosity = 3
-    dry_run = False
-    comments = ".test:!!"
-    matched_files = []
-
-
-    def __get_input(key: str, required: bool = False) -> Any:
-        if key == "include":
-            return include
-        elif key == "exclude":
-            return exclude
-        elif key == "working-directory":
-            return working_directory
-        elif key == "allow-outside-working-directory":
-            return allow_outside
-        elif key == "output-directory":
-            return output_directory
-        elif key == "recursive":
-            return recursive
-        elif key == "verbosity":
-            return verbosity
-        elif key == "dry-run":
-            return dry_run
-        elif key == "comments":
-            return comments
-        elif key == "fail-on-error":
-            return True
-
-    mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
-    mocker.patch("prepare_codestripper.main.get_matching_files", return_value=matched_files)
-    mocked_strip_files = mocker.patch("prepare_codestripper.main.strip_files")
-    mocked_info = mocker.patch("prepare_codestripper.main.info")
-
+def test_exclude(project: Path, monkeypatch: pytest.MonkeyPatch, mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=["**/*.java"], exclude=["**/B.java"], working_directory="solution")
+    set_output = mocker.patch("prepare_codestripper.main.set_output")
     strip()
+    assert (project / "out" / "src" / "A.java").is_file()
+    assert not (project / "out" / "src" / "B.java").exists()
+    set_output.assert_any_call("matched-files", ["src/A.java"])
 
-    mocked_info.assert_called_once_with("No files matched")
-    mocked_strip_files.assert_not_called()
 
-
-def test_fail_on_error(mocker: pytest_mock.MockerFixture) -> None:
-    """
-    Test that it fails if there are strip errors
-
-    :param mocker: mocker
-    :return:
-    """
-    include = ["a.txt", "b.txt"]
-    exclude = []
-    working_directory = "testproject"
-    allow_outside = False
-    output_directory = "out"
-    recursive = True
-    verbosity = 3
-    dry_run = False
-    comments = ".txt://"
-
-    def __get_input(key: str, required: bool = False) -> Any:
-        if key == "include":
-            return include
-        elif key == "exclude":
-            return exclude
-        elif key == "working-directory":
-            return working_directory
-        elif key == "allow-outside-working-directory":
-            return allow_outside
-        elif key == "output-directory":
-            return output_directory
-        elif key == "recursive":
-            return recursive
-        elif key == "verbosity":
-            return verbosity
-        elif key == "dry-run":
-            return dry_run
-        elif key == "comments":
-            return comments
-        elif key == "fail-on-error":
-            return True
-
-    mocker.patch("prepare_codestripper.main.get_input", side_effect=__get_input)
-    mock = mocker.patch("prepare_codestripper.main.set_failed")
-
+def test_no_matches(project: Path, monkeypatch: pytest.MonkeyPatch, mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=["**/*.kt"], working_directory="solution")
+    info = mocker.patch("prepare_codestripper.main.info")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
     strip()
+    info.assert_called_once_with("No files matched")
+    failed.assert_not_called()
+    assert not (project / "out").exists()
 
-    mock.assert_called_once()
+
+def test_dry_run(project: Path, monkeypatch: pytest.MonkeyPatch, mocker: pytest_mock.MockerFixture) -> None:
+    set_inputs(monkeypatch, include=["**/*.java"], working_directory="solution", dry_run=True)
+    set_output = mocker.patch("prepare_codestripper.main.set_output")
+    strip()
+    assert not (project / "out").exists()
+    set_output.assert_any_call("stripped-files", ["src/A.java", "src/B.java"])
+
+
+@pytest.mark.parametrize("fail_on_error, should_fail", [(True, True), (False, False)])
+def test_fail_on_error(fail_on_error: bool, should_fail: bool, project: Path, monkeypatch: pytest.MonkeyPatch,
+                       mocker: pytest_mock.MockerFixture) -> None:
+    (project / "solution" / "src" / "Invalid.java").write_text("class Invalid {\n//cs:remove:start\n}\n")
+    set_inputs(monkeypatch, include=["**/Invalid.java"], working_directory="solution", fail_on_error=fail_on_error)
+    mocker.patch("prepare_codestripper.main.set_output")
+    failed = mocker.patch("prepare_codestripper.main.set_failed")
+    strip()
+    assert failed.called == should_fail
